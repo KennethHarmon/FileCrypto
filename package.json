@@ -1,0 +1,27 @@
+{
+  "name": "filecrypto",
+  "version": "1.0.0",
+  "description": "File encryption app for advanced computer networks",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "install-app-deps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KennethHarmon/FileCrypto.git"
+  },
+  "author": "Kenneth Harmon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KennethHarmon/FileCrypto/issues"
+  },
+  "homepage": "https://github.com/KennethHarmon/FileCrypto#readme",
+  "devDependencies": {
+    "electron": "^23.1.4",
+    "electron-builder": "^23.6.0"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  }
+}
