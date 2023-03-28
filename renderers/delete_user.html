@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello from Electron renderer!</title>
+    <link rel = "stylesheet" href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <h1>Delete a user</h1>
+    <form>
+        <div class="mb-3">
+            <label for="person_to_delete" class="form-label">UserName: </label>
+            <select type="text" class="form-control" id="person_to_delete">             
+            </select>
+        </div>
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="./user_management.html" class="btn btn-primary">Back</a>
+    </form>
+    <p id="info"></p>
+    <script src="../bower_components/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+  <script src="./delete-user.js"></script>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello from Electron renderer!</title>
+    <link rel = "stylesheet" href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <h1>File Crypto!</h1>
+    <a href="./user_management.html" class="btn btn-primary">User Management</a>
+    <a href="./group_management.html" class="btn btn-primary">Group Management</a>
+    <a href="./encyption.html" class="btn btn-primary">File Encrytpion / Decyption</a>
+    <p id="info"></p>
+    <script src="./bower_components/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+  <script src="./renderer.js"></script>
+</html>

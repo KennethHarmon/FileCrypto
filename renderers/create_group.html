@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello from Electron renderer!</title>
+    <link rel = "stylesheet" href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <h1>Create a new group</h1>
+    <form>
+        <div class="mb-3">
+            <label for="group_name" class="form-label">Group Name</label>
+            <input type="text" class="form-control" id="group_name">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="./group_management.html" class="btn btn-primary">Back</a>
+    </form>
+    <p id="info"></p>
+    <script src="./bower_components/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+  <script src="../create_group.js"></script>
+</html>

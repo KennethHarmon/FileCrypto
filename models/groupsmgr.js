@@ -1,11 +1,17 @@
 const { db } = require("./dbmgr")
 
-exports.getGroups = () => {
-    const query = "SELECT * FROM groups";
-    let stmt = db.prepare(query);
-    db.run()
-    let res = stmt.all();
-    return res;
+exports.getGroups = async () => {
+    return new Promise((resolve, reject) => {
+    
+        db.all('SELECT GroupName FROM groups', [], (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            const groups = rows.map((row) => row.GroupName);
+            resolve(groups);
+          }
+        });
+      });
 }
 
 exports.createGroup = (groupname) => {

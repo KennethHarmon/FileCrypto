@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello from Electron renderer!</title>
+    <link rel = "stylesheet" href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <h1>File Crypto!</h1>
+    <a href="./create_group.html" class="btn btn-primary">Create Group</a>
+    <a href="./add_to_group.html" class="btn btn-info">Add to Group</a>
+    <a href="#" class="btn btn-danger">Delete from Group</a>
+    <a href="#" class="btn btn-danger">Delete Group</a>
+    <p id="info"></p>
+    <script src="./bower_components/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+  <script src="./renderer.js"></script>
+</html>

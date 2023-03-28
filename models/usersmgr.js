@@ -9,3 +9,21 @@ exports.getUser = (username) => {
     const query = "SELECT * FROM users WHERE UserName=?";
     db.get(query, [username]).run().finalize();
 }
+
+exports.getUsers = () => {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT UserID, UserName FROM users', [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                console.log(rows);
+                resolve(rows);
+            }
+        });
+    });
+}
+
+exports.deleteUser = (user_id) => {
+    const query = "DELETE FROM users WHERE rowid = ?;";
+    db.prepare(query, [user_id]).run().finalize();
+}
