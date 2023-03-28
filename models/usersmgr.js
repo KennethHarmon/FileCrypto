@@ -12,11 +12,10 @@ exports.getUser = (username) => {
 
 exports.getUsers = () => {
     return new Promise((resolve, reject) => {
-        db.all('SELECT UserID, UserName FROM users', [], (err, rows) => {
+        db.all('SELECT rowid, UserName FROM users', [], (err, rows) => {
             if (err) {
                 reject(err);
             } else {
-                console.log(rows);
                 resolve(rows);
             }
         });

@@ -2,13 +2,11 @@ const { db } = require("./dbmgr")
 
 exports.getGroups = async () => {
     return new Promise((resolve, reject) => {
-    
-        db.all('SELECT GroupName FROM groups', [], (err, rows) => {
+        db.all('SELECT GroupName, rowid FROM groups', [], (err, rows) => {
           if (err) {
             reject(err);
           } else {
-            const groups = rows.map((row) => row.GroupName);
-            resolve(groups);
+            resolve(rows);
           }
         });
       });
@@ -19,9 +17,9 @@ exports.createGroup = (groupname) => {
     db.prepare(query,[groupname]).run().finalize();
 }
 
-exports.addToGroup = (groupname, username) => {
-    const query = "INSERT INTO user_groups (user_id, group_id) VALUES  ((SELECT UserID FROM users WHERE username = ?), (SELECT groupID FROM groups WHERE groupname = ?));"
-    db.prepare(query, [username, groupname]).run().finalize();
+exports.addToGroup = (user_id, group_id) => {
+    const query = "INSERT INTO user_groups (user_id, group_id) VALUES  (?,?);"
+    db.prepare(query, [user_id, group_id]).run().finalize();
 }
 
 exports.getGroupMembers = (groupname) => {
