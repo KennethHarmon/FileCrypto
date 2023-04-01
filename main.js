@@ -1,10 +1,13 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const {createGroup, addToGroup, deleteGroup, deleteUserFromGroup, getGroupMembers, getGroups} = require('./models/groupsmgr');
-const { getUsers, addUser, deleteUser } = require('./models/usersmgr')
-const { generateKeyPair } = require('crypto');
-const Store = require('electron-store');
-import { initializeApp } from 'firebase/app';
+const crypto = require('crypto');
+const fs = require('fs');
+const { createGroup, addToGroup, getGroupsForUser, getGroupMembers } = require('./models/firegroupsmgr');
+const { createUser, getUsers, getUserByEmail } = require('./models/fireusersmgr');
+const { initializeApp } = require('firebase/app');
+const { getFirestore } =  require("firebase/firestore");
+const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } = require("firebase/auth");
+
 
 // TODO: Replace the following with your app's Firebase project configuration
 const firebaseConfig = {
@@ -17,39 +20,70 @@ const firebaseConfig = {
 };
 
 const fb = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore(fb);
+let user_id = null;
 
-
-const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-    },
+const registerGroupFunctions = () => {
+  ipcMain.on('create-group', async (event, group_name) => {
+      console.log("Creating group: " + group_name + "");
+      const group_id = await createGroup(db, group_name);
+      await addToGroup(db, user_id, group_id);
   });
 
-  ipcMain.on('create-group', (event, group_name) => {
-    console.log("Creating group: " + group_name + "");
-    createGroup(group_name);
-  });
-
-  ipcMain.handle('get-groups', async (event) => {
+  ipcMain.handle('get-groups-for-user', async (event) => {
       try {
-        const groups = await getGroups();
+        console.log('Getting groups for user..')
+        const groups = await getGroupsForUser(db, user_id);
         return groups;
       } catch (err) {
         console.error(err);
       }
   });
 
-  ipcMain.on('add-to-group', (event, user_id, group_id) => {
-    console.log("Adding user: " + user_id + " to group: " + group_id);
-    addToGroup(user_id, group_id);
+  ipcMain.on('add-to-group', async (event, email, group_id) => {
+    const adding_user_id = await getUserByEmail(db, email);
+    console.log("Adding user: " + adding_user_id + " to group: " + group_id);
+    addToGroup(db, adding_user_id, group_id);
+  })
+}
+
+const registerUserFunctions = () => {
+  ipcMain.handle('sign-in', (event, email, password) => {
+    console.log('Signing in')
+    signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      console.log('User signed in')
+      const user = userCredential.user;
+      return true;
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      return errorMessage;
+    });
   })
 
+  ipcMain.handle('sign-up', (event, email, password) => {
+    console.log('Signing up');
+    createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      console.log('User created');
+      const user = userCredential.user;
+      return true;
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log(errorCode);
+      console.log(errorMessage);
+      return errorMessage;
+    });
+  });
+
   ipcMain.on('add-user', (event, username, public_key) => {
-      console.log('Adding user: ' + username + " with public key " + public_key);
-      addUser(username, public_key); 
+    console.log('Adding user: ' + username + " with public key " + public_key);
+    addUser(username, public_key); 
   })
 
   ipcMain.on('delete-user', (event, user_id) => {
@@ -65,38 +99,74 @@ const createWindow = () => {
         console.error(err);
       }
   });
+}
 
-  win.loadFile('./renderers/index.html');
+const registerEncryptionFunctions = () => {
+  ipcMain.handle('encrypt-file', async (event, file_path, group) => {
+    console.log('Encrypting file: ' + file_path + " with public key " + group);
+    //Generate a passphrase for the file, and an iv for the encryption
+    const key = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
+    const algorithm = 'aes-256-cbc';
+
+    //Encrypt the file with the passphrase and iv
+    const fileStream = fs.createReadStream(file_path);
+    const encryptedFileStream = fs.createWriteStream(file_path + '.enc');
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    fileStream.pipe(cipher).pipe(encryptedFileStream);
+
+    encryptedFileStream.on('finish', async () => {
+      console.log('File encryption complete!');
+      encryptedFileStream.close();
+      //Get the public keys for each user in the group
+      const group_members = await getGroupMembers(db, group);
+
+      
+
+      //Encrypt the passphrase with the public key
+
+      //Encrypt the iv with the public key
+
+      //Return the encrypted file, encrypted passphrase, and encrypted iv
+
+      //Repeat for each user in the group
+    });
+  });
+}
+
+const createWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const uid = user.uid;
+      console.log('User is signed in')
+      console.log(uid);
+      user_id = await getUserByEmail(db, user.email);
+      if (user_id == null) {
+        console.log('User not found in database');
+        await createUser(db, uid, user.email);
+      }
+      win.loadFile('./renderers/index.html');
+    } else {
+      console.log('User is signed out')
+      win.loadFile('./renderers/login.html');
+      user_id = null;
+    }
+  });
 };
 
 app.whenReady().then(() => {
+  registerGroupFunctions();
+  registerUserFunctions();
+  registerEncryptionFunctions();
   createWindow();
-
-  const store = new Store();
-
-  if (store.get('private_key') == undefined) {
-    generateKeyPair('rsa', {
-      modulusLength: 4096,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem'
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-        cipher: 'aes-256-cbc',
-        passphrase: 'top secret'
-      }
-    }, (err, publicKey, privateKey) => {
-      store.set('public_key', publicKey);
-      store.set('private_key', privateKey);
-
-      console.log("Public key: " + publicKey);
-      console.log("Private key: " + privateKey);
-
-      addUser("You", publicKey);
-    });
-  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

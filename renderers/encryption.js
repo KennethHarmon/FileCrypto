@@ -6,17 +6,19 @@ addEventListener("DOMContentLoaded", async (event) => {
         console.log("Adding group: " + groups[i].name + " with id: " + groups[i].id)
         group_select.appendChild(new Option(groups[i].name, groups[i].id));
     }
-
 });
 
-document.querySelector('form').addEventListener('submit', (event) => {
+document.querySelector('form').addEventListener('submit', async (event) => {
+
     event.preventDefault();
+
     const selector = document.querySelector('#group');
     const group_name = selector.options[selector.selectedIndex].value;
-    console.log('Group name: ' + group_name)
 
-    const email = document.querySelector('#email').value;
-    
-    console.log('Adding user: ' + email + ' to group: ' + group_name + '')
-    window.groupsAPI.addToGroup(email, group_name);
-})
+    console.log('Group name: ' + group_name)
+    const file = document.getElementById("file_input").files[0];
+    const file_path = file.path;
+    console.log('File path: ' + file_path);
+
+    await window.encryptAPI.encryptFile(file_path, group_name);
+});
