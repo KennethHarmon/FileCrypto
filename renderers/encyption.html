@@ -21,10 +21,17 @@
             <label for="file_path" class="form-label">File: </label>
             <input type="file" class="form-control" id="file_input">
         </div>
-        <div class="mb-3 form-check">
+        <div class="mb-3">
             <label class="form-label" for="group">Group</label>
-            <select type="text" class="form-check-input" id="group">
+            <select type="text" class="form-control" id="group">
             </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="encrypt_choice">Encrypt / Decrypt</label>
+          <select type="text" class="form-control" id="encrypt_choice">
+            <option value="encrypt">Encrypt</option>
+            <option value="decrypt">Decrypt</option>
+          </select> 
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="./index.html" class="btn btn-primary">Back</a>

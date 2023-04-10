@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld('usersAPI', {
 })
 
 contextBridge.exposeInMainWorld('encryptAPI', {
-    encryptFile: (file_path, group) => ipcRenderer.invoke('encrypt-file', file_path, group)
+    encryptFile: (file_path, group) => ipcRenderer.invoke('encrypt-file', file_path, group),
+    decryptFile: (file_path, group) => ipcRenderer.invoke('decrypt-file', file_path, group)
 })

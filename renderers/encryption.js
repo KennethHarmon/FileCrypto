@@ -20,5 +20,23 @@ document.querySelector('form').addEventListener('submit', async (event) => {
     const file_path = file.path;
     console.log('File path: ' + file_path);
 
-    await window.encryptAPI.encryptFile(file_path, group_name);
+    const encrypt_selector = document.getElementById('encrypt_choice');
+    const choice = encrypt_selector.options[encrypt_selector.selectedIndex].value;
+    console.log('Choice: ' + choice);
+
+    if (choice == 'encrypt') {
+        console.log('Encrypting file...')
+        const encyptedFilePath = await window.encryptAPI.encryptFile(file_path, group_name);
+        const info = document.getElementById("info");
+        info.innerHTML = "Encrypted file saved to: " + encyptedFilePath;
+    }
+    else if (choice == 'decrypt') {
+        console.log('Decrypting file...')
+        const decryptedFilePath = await window.encryptAPI.decryptFile(file_path, group_name);
+        const info = document.getElementById("info");
+        info.innerHTML = "Decrypted file saved to: " + decryptedFilePath;
+    }
+    else {
+        console.log('Invalid choice')
+    }
 });

@@ -1,11 +1,13 @@
 const {doc, collection, query, where, getDoc, getDocs, setDoc} = require('firebase/firestore'); 
-const { generateKeyPair} = require('crypto');
+const { execSync } = require('child_process')
+const crypto = require('crypto');
 const Store = require('electron-store');
 const util = require('util')
+const fs = require('fs');
 
-const generateKeyPairAsync = util.promisify(generateKeyPair);
+const generateKeyPairAsync = util.promisify(crypto.generateKeyPair);
 
-async function generateKeys() {
+async function generateKeys(user_id) {
     try {
       const { publicKey, privateKey } = await generateKeyPairAsync('rsa', {
         modulusLength: 4096,
@@ -15,11 +17,18 @@ async function generateKeys() {
         },
         privateKeyEncoding: {
           type: 'pkcs8',
-          format: 'pem',
-          cipher: 'aes-256-cbc',
-          passphrase: 'suoer duper top secret',
+          format: 'pem'
         }
       });
+
+      const store = new Store();
+      store.set(`${user_id}-private_key`, privateKey);
+
+      fs.writeFileSync('privateKey.pem', privateKey);
+
+      // Generate a self-signed x.509 certificate using OpenSSL
+      execSync(`openssl req -new -x509 -key privateKey.pem -out certificate.pem -days 365 -nodes -subj "/CN=${user_id}"`);
+
       return { publicKey, privateKey };
     } catch (err) {
       console.error(err);
@@ -28,16 +37,27 @@ async function generateKeys() {
 
 exports.createUser = async (db, user_id, user_email) => {
 
-    const { publicKey, privateKey } = await generateKeys();
+    const { publicKey, privateKey } = await generateKeys(user_id);
+
+    const cert = fs.readFileSync('certificate.pem', 'utf8');
+
+    const signer = crypto.createSign('SHA256');
+    signer.update(publicKey);
+    const signature = signer.sign(privateKey, 'base64');
+
+    const verifier = crypto.createVerify('SHA256');
+    verifier.update(publicKey);
+    const isValid = verifier.verify(cert, signature, 'base64');
+    console.log('Signature verified: ', isValid);
 
     await setDoc(doc(db, "users", user_id), {
         email: user_email,
         public_key: publicKey,
+        cert: cert,
+        signature: signature
     });
     console.log("User added with ID: ", user_id);
-
-    const store = new Store();
-    store.set(`${user_id}-private_key`, privateKey);
+    
 }
 
 exports.addUser =  (db, email, public_key) => {
@@ -59,7 +79,6 @@ exports.getUserByEmail = async (db, email) => {
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
-        console.log("User data:", doc.data());
         return doc.id;
     } else {
         console.log("No such user!");

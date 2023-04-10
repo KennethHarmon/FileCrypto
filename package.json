@@ -24,6 +24,7 @@
   "dependencies": {
     "electron-store": "^8.1.0",
     "firebase": "^9.18.0",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.0"
   }
 }
