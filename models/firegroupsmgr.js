@@ -1,4 +1,4 @@
-const {doc, collection, query, where, getDoc, getDocs, setDoc, addDoc, documentId} = require('firebase/firestore'); 
+const {doc, collection, query, where, getDoc, getDocs, setDoc, addDoc, documentId, deleteField, updateDoc} = require('firebase/firestore'); 
 const crypto = require('crypto');
 
 exports.createGroup = async (db, groupname) => {
@@ -34,6 +34,23 @@ exports.addToGroup = async (db, user_id, group_id) => {
         console.log('Signature invalid, user not added to group');
     }
     console.log(`User ${user_id} added to group ${group_id}`);
+}
+
+exports.removeFromGroup = async (db, user_id, group_id) => {
+    const docRef = doc(db, "userGroups", user_id);
+    const docSnapshot = await getDoc(docRef);
+
+    if (docSnapshot.exists()) {
+        const userGroupsData = docSnapshot.data();
+        const userGroupIds = Object.keys(userGroupsData);
+
+        if (userGroupIds.includes(group_id)) {
+            await updateDoc(doc(db, "userGroups", user_id), {
+                [group_id]: deleteField()
+            });
+            console.log(`User ${user_id} removed from group ${group_id}`);
+        }
+    }
 }
 
 exports.getGroupsForUser = async (db, user_id) => {

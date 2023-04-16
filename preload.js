@@ -2,7 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('authAPI', {
     signUp: (email, password) => ipcRenderer.invoke('sign-up', email, password),
-    signIn: (email, password) => ipcRenderer.invoke('sign-in', email, password)
+    signIn: (email, password) => ipcRenderer.invoke('sign-in', email, password),
+    signOut: () => ipcRenderer.invoke('sign-out')
 });
 
 contextBridge.exposeInMainWorld('groupsAPI', {

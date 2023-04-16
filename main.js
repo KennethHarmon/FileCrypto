@@ -1,10 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const crypto = require('crypto');
-const Store = require('electron-store');
-const { saveKeys, getKeys, encryptFile, decryptFile, reEncryptFiles } = require('./models/fireencryptionmanager');
-const { createGroup, addToGroup, getGroupsForUser, getGroupMembers, getPublicKeys } = require('./models/firegroupsmgr');
-const { createUser, getUsers, getUserByEmail } = require('./models/fireusersmgr');
+const { encryptFile, decryptFile, reEncryptFiles, removeFileAccess } = require('./models/fireencryptionmanager');
+const { createGroup, addToGroup, getGroupsForUser} = require('./models/firegroupsmgr');
+const { createUser, getUserByEmail } = require('./models/fireusersmgr');
 const { initializeApp } = require('firebase/app');
 const { getFirestore } =  require("firebase/firestore");
 const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } = require("firebase/auth");
@@ -42,14 +40,25 @@ const registerGroupFunctions = () => {
   });
 
   ipcMain.on('add-to-group', async (event, email, group_id, add_to_existing_files) => {
-    //const adding_user_id = await getUserByEmail(db, email);
-    //console.log("Adding user: " + adding_user_id + " to group: " + group_id);
-    //addToGroup(db, adding_user_id, group_id);
+    const adding_user_id = await getUserByEmail(db, email);
+    console.log("Adding user: " + adding_user_id + " to group: " + group_id);
+    addToGroup(db, adding_user_id, group_id);
 
     if (add_to_existing_files) {
-      reEncryptFiles(db, group_id);
+      reEncryptFiles(db, group_id, current_user_id);
     }
   })
+
+  ipcMain.handle('remove-from-group', async (event, group_id, email, revmove_file_access) => {
+    const removing_user_id = await getUserByEmail(db, email);
+    console.log("Removing user: " + removing_user_id + " from group: " + group_id);
+    removeFromGroup(db, removing_user_id, group_id);
+
+    if (revmove_file_access) {
+      removeFileAccess(db, group_id, removing_user_id);
+    }
+  })
+
 }
 
 const registerUserFunctions = () => {
@@ -85,32 +94,20 @@ const registerUserFunctions = () => {
     });
   });
 
-  ipcMain.handle('remove-user', async (event, group_id, user_id) => {
-    //Remove user from usergroups
-
-    //Get all files encrypted for the given group
-
-    //For each file, remove the specified users password from the file
-  })
-
-  ipcMain.handle('get-users', async (event) => {
-      try {
-        const users = await getUsers();
-        return users;
-      } catch (err) {
-        console.error(err);
-      }
+  ipcMain.handle('sign-out', async (event) => {
+    console.log('Signing out');
+    auth.signOut();
   });
 }
 
 const registerEncryptionFunctions = () => {
   ipcMain.handle('encrypt-file', async (event, file_path, group) => {
     const encrypted_file_path = await encryptFile(db, file_path, group);
-    return file_path;
+    return encrypted_file_path;
   });
 
   ipcMain.handle('decrypt-file', async (event, file_path) => {
-    const new_file_path = await decryptFile(file_path, current_user_id);
+    const new_file_path = await decryptFile(db, file_path, current_user_id);
     return new_file_path;
   });
 }

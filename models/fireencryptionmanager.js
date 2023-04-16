@@ -1,8 +1,9 @@
-const {doc, collection, query, where, getDoc, getDocs, setDoc, addDoc, updateDoc, documentId} = require('firebase/firestore'); 
+const {doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteField} = require('firebase/firestore'); 
 const { getGroupMembers, getPublicKeys} = require('./firegroupsmgr');
 const crypto = require('crypto');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const Store = require('electron-store');
 
 exports.saveKeys = async (db, file_id, user_id, encrypted_passphrase, encrypted_iv) => {
     const docRef = doc(db, "file_keys/", file_id);
@@ -123,7 +124,7 @@ exports.decryptFile = async (db, file_path, current_user_id) => {
     //data = Buffer.from(data).toString('base64');
 
     //Check if the user is in group for the given file:
-    const keys = await getKeys(db, id, current_user_id);
+    const keys = await exports.getKeys(db, id, current_user_id);
 
     if (keys == null) {
       console.log('User is not in group for file');
@@ -140,8 +141,8 @@ exports.decryptFile = async (db, file_path, current_user_id) => {
       const private_key = store.get(`${current_user_id}-private_key`);
 
       console.log('Private key: ' + private_key + '')
-      const passphrase = crypto.privateDecrypt({key: private_key, passphrase: 'suoer duper top secret'}, Buffer.from(encrypted_passphrase, 'base64'));
-      const iv = crypto.privateDecrypt({key: private_key, passphrase: 'suoer duper top secret'}, Buffer.from(encrypted_iv, 'base64'));
+      const passphrase = crypto.privateDecrypt({key: private_key}, Buffer.from(encrypted_passphrase, 'base64'));
+      const iv = crypto.privateDecrypt({key: private_key}, Buffer.from(encrypted_iv, 'base64'));
 
       console.log('Passphrase: ' + passphrase.toString('base64') + '');
       console.log('IV: ' + iv.toString('base64') + '');
@@ -166,17 +167,53 @@ exports.decryptFile = async (db, file_path, current_user_id) => {
 
 }
 
-exports.reEncryptFiles = async (db, group) => {
+exports.reEncryptFiles = async (db, group, current_user_id, new_user_id) => {
     // Get all the files that have been encrypted for the given group
     const files = await exports.getFilesForGroup(db, group);
 
-    //Get the public keys of all the users in the group
-    const group_members = await getGroupMembers(db, group);
-    const public_keys = await getPublicKeys(db, group_members);
+    //Get the public keys of the new group member
+    const public_keys = await getPublicKeys(db, [new_user_id]);
 
 
     // For each file, decrypt its passcode and re-encrypt it with the new public keys
-    //for (const file of files) {
-        
+    for (const file of files) {
+        //Get the encrypted passcode and iv for the user
+        const keys = await exports.getKeys(db, file.id, user_id);
+        const {encrypted_passphrase, encrypted_iv} = keys;
 
+        //Decrypt the passcode and iv with the private key
+        const store = new Store();
+        const private_key = store.get(`${current_user_id}-private_key`);
+
+        const passphrase = crypto.privateDecrypt({key: private_key}, Buffer.from(encrypted_passphrase, 'base64'));
+        const iv = crypto.privateDecrypt({key: private_key}, Buffer.from(encrypted_iv, 'base64'));
+
+        for (const [user_id, public_key] of Object.entries(public_keys)) {
+            console.log('Encrypting passphrase and iv for user: ' + user_id);
+            //Encrypt the passphrase and iv with the public key
+            const encrypted_key = crypto.publicEncrypt(public_key, passphrase).toString('base64');
+            const encrypted_iv = crypto.publicEncrypt(public_key, iv).toString('base64');
+      
+            //Save the encrypted passphrase and iv to the database
+            await exports.saveKeys(db, file_id, user_id, encrypted_key, encrypted_iv);
+          }
+    
+    } 
+
+}
+
+exports.removeFileAccess = async (db, group, user_id) => {
+
+    //Get all the files that have been encrypted for the given group
+    const files = await exports.getFilesForGroup(db, group);
+
+    //For each file
+    for (const file of files) {
+        //Remove the user from the group
+        const docRef = doc(db, "file_keys/", file.id);
+        await updateDoc(docRef, {
+            [user_id]: deleteField()
+        });
+    }
+    
 }
