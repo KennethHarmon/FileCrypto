@@ -11,21 +11,28 @@ exports.createGroup = async (db, groupname) => {
 
 exports.addToGroup = async (db, user_id, group_id) => {
 
-    //Verify users public key 
+    //Gather public key, cert and signature for user
     const userDocRef = doc(db, "users", user_id);
     const userDocSnapshot = await getDoc(userDocRef);
     const publicKey = userDocSnapshot.data().public_key;
     const cert = userDocSnapshot.data().cert;
     const signature = userDocSnapshot.data().signature;
 
+    //Verify signature
     const verifier = crypto.createVerify('SHA256');
     verifier.update(publicKey);
     const isValid = verifier.verify(cert, signature, 'base64');
     console.log('Signature verified: ', isValid);
 
-    await setDoc(doc(db, "userGroups", user_id), {
-        [group_id]: true
-    });
+    //Add user to group if signature is valid
+    if (isValid) {
+        await setDoc(doc(db, "userGroups", user_id), {
+            [group_id]: true
+        });
+    }   
+    else {
+        console.log('Signature invalid, user not added to group');
+    }
     console.log(`User ${user_id} added to group ${group_id}`);
 }
 

@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('authAPI', {
 contextBridge.exposeInMainWorld('groupsAPI', {
     createGroup: (group_name) => ipcRenderer.send('create-group', group_name),
     getGroupsForUser: () => ipcRenderer.invoke('get-groups-for-user'),
-    addToGroup: (email, group_id) => ipcRenderer.send('add-to-group', email, group_id)
+    addToGroup: (email, group_id, add_to_existing_files) => ipcRenderer.send('add-to-group', email, group_id, add_to_existing_files)
 })
 
 contextBridge.exposeInMainWorld('usersAPI', {

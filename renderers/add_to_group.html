@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
+      content="default-src 'self'; script-src 'self' https:;"
     />
     <meta
       http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
+      content="default-src 'self'; script-src 'self' https:;"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello from Electron renderer!</title>
@@ -23,6 +23,12 @@
             </select>
             <label for="email" class="form-label">Email of person to add:</label>
             <input type="email" class="form-control" id="email">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="" id="add-to-existing-files" checked>
+              <label class="form-check-label" for="add-to-existing-files">
+                Allow this user to decrypt already encrypted files for the group?
+              </label>
+            </div>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="./group_management.html" class="btn btn-primary">Back</a>

@@ -16,7 +16,9 @@ document.querySelector('form').addEventListener('submit', (event) => {
     console.log('Group name: ' + group_name)
 
     const email = document.querySelector('#email').value;
+
+    const add_to_existing_files = document.querySelector('#add-to-existing-files').checked;
     
     console.log('Adding user: ' + email + ' to group: ' + group_name + '')
-    window.groupsAPI.addToGroup(email, group_name);
+    window.groupsAPI.addToGroup(email, group_name, add_to_existing_files);
 })
